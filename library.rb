@@ -1,81 +1,72 @@
 class Book
-  @@on_shelf=[]
-  @@on_loan=[]
-  @@due_date= Time.now
-  @@over_due=[]
-
+  @@on_shelf = []
+  @@on_loan = []
 
   def initialize(title, author, isbn)
-   @title= title
-   @author= author
-   @isbn =isbn
+    @title = title
+    @author = author
+    @ISBN = isbn
   end
-
+        # CLASS METHODS
   def self.create(title, author, isbn)
-   # @@on_shelf<<self.new(title, author, isbn)
-    new_book = self.new(title,author,isbn)
+    new_book = Book.new(title, author, isbn)
     @@on_shelf << new_book
     return new_book
   end
-
-  def self.browse
-   random_book = @@on_shelf[rand(@@on_shelf.length)]
-   # puts random_book
-   # return @@on_shelf
+  def self.current_due_date
+    return Time.now + (60*60*24*7) #one week in seconds
   end
-  #
-  def self.available
-   return @@on_shelf
-  end
-
-  def self.borrowed
-   return @@on_loan
-  end
-
-  def lent_out?
-   return @@on_loan.include?(self)
-  end
-
-  def self.due_date
-   @@due_date= Time.now + (60*60*24*7)
-   return @@due_date
-  end
-
-  def due_date
-    return @@due_date
-  end
-
-  def borrow
-     if self.lent_out?
-       return false
-     else
-       Book.due_date
-       @@on_loan<< self
-       return true
-     end
-  end
-
   def self.overdue
-    @@on_loan.each do |a|
-      duedate=a.due_date
-      if duedate < Time.now
-        @@over_due << a
+    overdue_books = []
+    @@on_loan.each do |obj|
+      if obj.due_date < Time.now
+      overdue_books << obj
       end
-    return @@over_due
-   end
+    end
+    return overdue_books
+  end
+  def self.browse
+    @@on_shelf.sample
+  end
+  def self.available
+    @@on_shelf
+  end
+  def self.borrowed
+    @@on_loan
+  end
+          # READERS
+  def due_date
+    @due_date
   end
 
+          # WRITERS
+  def due_date_change(new_date)
+    @due_date = new_date
+  end
+  def borrow
+    if lent_out?
+      return false
+    else
+      @due_date = Book.current_due_date
+      @@on_loan << self
+      @@on_shelf.delete(self)
+      return true
+    end
+  end
   def return_to_library
-    if self.lent_out?
+    if lent_out?
+      @@on_shelf << self
       @@on_loan.delete(self)
-      @@on_shelf<< self
-      @@due_date =""
+      @due_date = nil
       return true
     else
-    return false
-   end
-
+      return false
+    end
   end
+  def lent_out?
+    @@on_loan.include?(self)
+  end
+
 
 end
 
